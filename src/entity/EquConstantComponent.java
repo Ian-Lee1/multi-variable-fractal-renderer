@@ -13,4 +13,8 @@ public class EquConstantComponent implements EquComponent{
         return this.value;
     }
 
+    @Override
+    public boolean isComplete() {
+        return true;
+    }
 }

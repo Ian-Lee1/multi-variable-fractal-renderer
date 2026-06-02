@@ -43,6 +43,8 @@ public class ComplexBasic implements Complex{
         double modulus = Math.sqrt(this.r * this.r + this.i * this.i);
         double logI = Math.atan2(this.i, this.r);
 
+        if (modulus == 0.0)
+            return new ComplexBasic(0,0);
         // Natural log of this complex number: ln(z) = ln|z| + i*arg
         double logR = Math.log(modulus);
 
@@ -67,6 +69,11 @@ public class ComplexBasic implements Complex{
     @Override
     public double getI() {
         return i;
+    }
+
+    @Override
+    public String toString(){
+        return "(" + r + "," + i + "i" + ")";
     }
 
 }

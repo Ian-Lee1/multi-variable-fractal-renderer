@@ -5,6 +5,6 @@ import entity.EquationError;
 
 public interface Solver {
     void setEquation(String equation) throws EquationError;
-    void updateVariable(int i, double value);
+    void updateVariable(int i, Complex value);
     Complex solve();
 }
