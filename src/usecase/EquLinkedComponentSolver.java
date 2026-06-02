@@ -5,21 +5,40 @@ import entity.*;
 import java.util.ArrayList;
 
 public class EquLinkedComponentSolver implements Solver {
-    private String equation;
-    private EquComponent equationLink;
     private final ArrayList<Complex> variables;
+    private final ArrayList<Complex> tempVariables;
+    private final ArrayList<Integer> variableAddress;
+    private final ArrayList<String> equations;
+    private final ArrayList<EquComponent> equLinks;
+
+
     private final char[] operationChars = {'+', '-', '*', '/', '^'};
     private final char[] specialChars = {'c', 'v', '(', ')'};
 
-    public EquLinkedComponentSolver(String equation){
-        this.equation = equation;
+    public EquLinkedComponentSolver(){
         this.variables = new ArrayList<>();
-        compile();
+        this.equations = new ArrayList<>();
+        this.equLinks = new ArrayList<>();
+        this.tempVariables = new ArrayList<>();
+        this.variableAddress = new ArrayList<>();
     }
     @Override
-    public void setEquation(String equation) throws EquationError {
-        this.equation=equation;
-        compile();
+    public void setEquation(int i, String equation) throws EquationError {
+        if (i < 0 || i >= variables.size())
+            throw new EquationError("Variable "+ i + "has not been declared.");
+        int index;
+        if (variableAddress.contains(i)) {
+            index = variableAddress.indexOf(i);
+            equations.set(index, equation);
+        }
+        else{
+            index = equations.size();
+            equations.add(equation);
+            tempVariables.add(new ComplexBasic(0,0));
+            equLinks.add(null);
+            variableAddress.add(i);
+        }
+        compile(index);
     }
 
     @Override
@@ -37,30 +56,54 @@ public class EquLinkedComponentSolver implements Solver {
 
     public void removeVariable(int i){
         variables.remove(i);
+        for(int j = 0; j < equations.size(); j++){
+            if (variableAddress.get(j) == i){
+                int index = variableAddress.indexOf(i);
+                variableAddress.remove(index);
+                tempVariables.remove(index);
+                equLinks.remove(index);
+                equations.remove(index);
+            }
+            else if (variableAddress.get(j) > i)
+                variableAddress.set(j, variableAddress.get(j) - 1);
+        }
     }
 
     @Override
-    public Complex solve() {
-        return equationLink.solve();
+    public void solve() {
+        for(int i = 0; i < equations.size(); i++){
+            tempVariables.set(i, equLinks.get(i).solve());
+        }
+        for(int i = 0; i < equations.size(); i++){
+            variables.set(variableAddress.get(i), tempVariables.get(i));
+        }
+
     }
 
-    private void compile(){
-        if (equation.isEmpty())
-            throw new EquationError("Equation is empty.");
-        if (equation.charAt(0) == '-')
-            equation = "c(0)" + equation;
-        ComponentTuple temp = compileRecursive(0);
-        this.equationLink = temp.component;
+    @Override
+    public Complex readVariable(int i){
+        if (i < 0 || i > variables.size())
+            throw new EquationError("Variable " + i + " has not been delcared.");
+        return variables.get(i);
     }
-    private ComponentTuple compileRecursive(int starting) {
+
+    private void compile(int i){
+        if (equations.get(i).isEmpty())
+            throw new EquationError("Equation for variable " + i + " is empty.");
+        if (equations.get(i).charAt(0) == '-')
+            equations.set(i, "c(0)" + equations.get(i));
+        ComponentTuple temp = compileRecursive(0, equations.get(i));
+        this.equLinks.set(i, temp.component);
+    }
+    private ComponentTuple compileRecursive(int starting, String equation) {
         EquComponent lastTerm = null;
         int i = starting;
         while (i < equation.length()){
             if(contains(equation.charAt(i), operationChars)){ // next character is an operation
-                lastTerm = processOperation(lastTerm, i);
+                lastTerm = processOperation(lastTerm, i, equation);
             }
             else if(contains(equation.charAt(i), specialChars)) { //next char is a constant, variable, or a parentheses.
-                ComponentTuple temp = processSpecial(lastTerm, i, starting);
+                ComponentTuple temp = processSpecial(lastTerm, i, starting, equation);
                 if (equation.charAt(i) == ')')
                     return temp;
                 lastTerm = temp.component;
@@ -78,7 +121,7 @@ public class EquLinkedComponentSolver implements Solver {
         return new ComponentTuple(lastTerm, i);
     }
 
-    private EquComponent processOperation(EquComponent lastTerm, int i){
+    private EquComponent processOperation(EquComponent lastTerm, int i, String equation){
         if(lastTerm == null || !lastTerm.isComplete())
             throw new EquationError("Equation has missing operands");
         EquLinkedComponent newComponent = null;
@@ -105,21 +148,21 @@ public class EquLinkedComponentSolver implements Solver {
     }
 
 
-    private ComponentTuple processSpecial(EquComponent lastTerm, int i, int starting){
+    private ComponentTuple processSpecial(EquComponent lastTerm, int i, int starting, String equation){
         ComponentTuple temp;
         switch (equation.charAt(i)){
             case 'c':
-                temp = getConstant(i);
+                temp = getConstant(i, equation);
                 lastTerm = joinComponents(lastTerm, temp.component);
                 i = temp.jumpTo;
                 break;
             case 'v':
-                temp = getVariable(i);
+                temp = getVariable(i, equation);
                 lastTerm = joinComponents(lastTerm, temp.component);
                 i = temp.jumpTo;
                 break;
             case '(':
-                temp = compileRecursive(i+1);
+                temp = compileRecursive(i+1, equation);
                 EquParenthesisComponent parenthesis = new EquParenthesisComponent(temp.component);
                 lastTerm = joinComponents(lastTerm, parenthesis);
                 i = temp.jumpTo;
@@ -184,7 +227,7 @@ public class EquLinkedComponentSolver implements Solver {
         return product;
     }
 
-    private ComponentTuple getConstant(int i){
+    private ComponentTuple getConstant(int i, String equation){
         int jumpTo = 0;
         int pointer = i+2;
         double real = 0;
@@ -228,7 +271,7 @@ public class EquLinkedComponentSolver implements Solver {
         return new ComponentTuple(new EquConstantComponent(new ComplexBasic(real, imag)), jumpTo);
     }
 
-    private ComponentTuple getVariable(int i) {
+    private ComponentTuple getVariable(int i, String equation) {
         int jumpTo = 0;
         int pointer = i + 1;
         EquVariableComponent varComp = null;
@@ -259,6 +302,17 @@ public class EquLinkedComponentSolver implements Solver {
 
     @Override
     public String toString(){
-        return equationLink.toString();
+        if (equations.size() == 0)
+            return "Solver has " + variables.size() + " variables and no equations.";
+        String str = "Variables: \n";
+        for(int i = 0; i < variables.size(); i++){
+            str += "v" + i + ": " + variables.get(i).toString() + "\n";
+        }
+        str += "Equations: \n";
+        for(int i = 0; i < equations.size(); i++){
+            str += "Equ for v" + variableAddress.get(i) + ": " + equLinks.get(i).toString() + "\n";
+        }
+
+        return str;
     }
 }

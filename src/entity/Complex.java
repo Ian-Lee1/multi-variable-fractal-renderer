@@ -8,4 +8,5 @@ public interface Complex {
     Complex pow(Complex x);
     double getR();
     double getI();
+    double lengthSq();
 }

@@ -4,9 +4,10 @@ import entity.Complex;
 import entity.EquationError;
 
 public interface Solver {
-    void setEquation(String equation) throws EquationError;
+    void setEquation(int i, String equation) throws EquationError;
     void updateVariable(int i, Complex value);
     void addVariable();
     void removeVariable(int i);
-    Complex solve();
+    Complex readVariable(int i);
+    void solve();
 }

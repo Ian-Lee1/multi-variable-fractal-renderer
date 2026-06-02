@@ -72,6 +72,10 @@ public class ComplexBasic implements Complex{
     }
 
     @Override
+    public double lengthSq(){
+        return r+r + i*i;
+    }
+    @Override
     public String toString(){
         return "(" + r + "," + i + "i" + ")";
     }
