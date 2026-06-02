@@ -23,4 +23,9 @@ public class EquVariableComponent implements EquComponent{
     public boolean isComplete() {
         return true;
     }
+
+    @Override
+    public String toString(){
+        return "v" + index;
+    }
 }

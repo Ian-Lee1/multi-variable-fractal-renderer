@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class EquLinkedComponentSolver implements Solver {
     private String equation;
     private EquComponent equationLink;
-    private ArrayList<Complex> variables;
+    private final ArrayList<Complex> variables;
     private final char[] operationChars = {'+', '-', '*', '/', '^'};
     private final char[] specialChars = {'c', 'v', '(', ')'};
 
@@ -45,65 +45,144 @@ public class EquLinkedComponentSolver implements Solver {
     }
 
     private void compile(){
-        EquLinkedComponent temp = new EquLinkedComponent(null, Operations.ADD, new EquConstantComponent(new ComplexBasic(0,0)));
-        compileRecursive(0, temp);
-        this.equationLink = temp.getNext();
+        if (equation.isEmpty())
+            throw new EquationError("Equation is empty.");
+        if (equation.charAt(0) == '-')
+            equation = "c(0)" + equation;
+        ComponentTuple temp = compileRecursive(0);
+        this.equationLink = temp.component;
     }
-    private int compileRecursive(int starting, EquComponent last) {
-        // v(0) = pixel location, v(1) = last output, v(...) = defined variables
-        // c() = constants
-        // ()
-        // +-*/
-
-        //c(5+6i)/c(7+8i)
-        //get and store constant block 5+6i
-        //      last term = 5+6i block
-        //get new divide block with value being the 5+6i block
-        //get
-        int lastOp = starting;
-        EquComponent lastOpTerm = last;
-        EquComponent lastNumTerm = null;
-        //create a method that can join terms based on term.prev.next == null
-        for (int i = starting; i < equation.length(); i++) {
+    private ComponentTuple compileRecursive(int starting) {
+        EquComponent lastTerm = null;
+        int i = starting;
+        while (i < equation.length()){
             if(contains(equation.charAt(i), operationChars)){ // next character is an operation
-                //if(lastTerm == null || lastTerm.isComplete()) //check if a term is contained between 2 operations
-                //    throw new EquationError("Equation has adjacent operations");
-
+                lastTerm = processOperation(lastTerm, i);
             }
-
-            if(contains(equation.charAt(i), specialChars)) { //next char is a constant, variable, or a parentheses.
-                switch (equation.charAt(i)){
-                    case 'c':
-                        //get the constant as a component. If last op is incomplete, save it to last Num term.
-                        //if last op is complete, multiply it to last num term, then set last op's next to the product.
-                        System.out.println(getConstant(i).component.solve().getR());
-                        System.out.println(getConstant(i).component.solve().getI());
-                }
+            else if(contains(equation.charAt(i), specialChars)) { //next char is a constant, variable, or a parentheses.
+                ComponentTuple temp = processSpecial(lastTerm, i, starting);
+                if (equation.charAt(i) == ')')
+                    return temp;
+                lastTerm = temp.component;
+                i = temp.jumpTo;
             }
+            i++;
 
         }
-        return 0;
+        if (starting != 0)
+            throw new EquationError("Equation has unclosed parenthesis.");
+        lastTerm = findRootTerm(lastTerm);
+
+        if (lastTerm == null || !lastTerm.isComplete())
+            throw new EquationError("Equation is incomplete.");
+        return new ComponentTuple(lastTerm, i);
     }
 
-//    private EquComponent joinComponents(EquComponent last, EquComponent curr) {
-//        //last is null, new is complete:   last = new
-//        //last is incomplete, new is complete:   x+c(5+6i)    last.next = new
-//        //last is complete, new is complete, c(5+6i)c(5+6i)
-//
-//    }
-//        x+6*7
-//
-//                x    last:x (complete)
-//                +(x,null)    last: + (incomplete)
-//                +(x,6)       last: + (complete)
-//                +(x,*(6, null))   op is (+/ /)
-//               +(x,*(6,7))
-//
-//            (5+6)(7+8)
-//
-//                c()
-//                c(5)
+    private EquComponent processOperation(EquComponent lastTerm, int i){
+        if(lastTerm == null || !lastTerm.isComplete())
+            throw new EquationError("Equation has missing operands");
+        EquLinkedComponent newComponent = null;
+        switch (equation.charAt(i)){
+            case '+', '-':
+                newComponent = new EquLinkedComponent(getOperation(equation.charAt(i)), lastTerm);
+                if (lastTerm instanceof EquLinkedComponent) {
+                    lastTerm = findRootTerm(lastTerm);
+                    newComponent = new EquLinkedComponent(getOperation(equation.charAt(i)), lastTerm);
+                    ((EquLinkedComponent) lastTerm).setPrev(newComponent);
+                }
+                break;
+            case '*', '/', '^':
+                if (lastTerm instanceof EquLinkedComponent) {
+                    newComponent = new EquLinkedComponent(getOperation(equation.charAt(i)), ((EquLinkedComponent) lastTerm).getNext());
+                    ((EquLinkedComponent) lastTerm).setNext(newComponent);
+                    newComponent.setPrev(lastTerm);
+                }else {
+                    newComponent = new EquLinkedComponent(getOperation(equation.charAt(i)), lastTerm);
+                }
+                break;
+        }
+        return newComponent;
+    }
+
+
+    private ComponentTuple processSpecial(EquComponent lastTerm, int i, int starting){
+        ComponentTuple temp;
+        switch (equation.charAt(i)){
+            case 'c':
+                temp = getConstant(i);
+                lastTerm = joinComponents(lastTerm, temp.component);
+                i = temp.jumpTo;
+                break;
+            case 'v':
+                temp = getVariable(i);
+                lastTerm = joinComponents(lastTerm, temp.component);
+                i = temp.jumpTo;
+                break;
+            case '(':
+                temp = compileRecursive(i+1);
+                EquParenthesisComponent parenthesis = new EquParenthesisComponent(temp.component);
+                lastTerm = joinComponents(lastTerm, parenthesis);
+                i = temp.jumpTo;
+                break;
+            case ')':
+                if (starting == 0)
+                    throw new EquationError("Unexpecting closing parethesis.");
+                return new ComponentTuple(findRootTerm(lastTerm), i);
+        }
+        return new ComponentTuple(lastTerm, i);
+    }
+
+    private EquComponent findRootTerm(EquComponent lastTerm){
+        if (!(lastTerm instanceof EquLinkedComponent) || ((EquLinkedComponent) lastTerm).getPrev() == null)
+            return lastTerm;
+        return findRootTerm(((EquLinkedComponent) lastTerm).getPrev());
+
+    }
+
+    private Operations getOperation(char op){
+        return switch (op) {
+            case '+' -> Operations.ADD;
+            case '-' -> Operations.SUB;
+            case '*' -> Operations.MUL;
+            case '/' -> Operations.DIV;
+            case '^' -> Operations.POW;
+            default -> throw new IllegalStateException("Unexpected value: " + op);
+        };
+
+    }
+
     public record ComponentTuple(EquComponent component, int jumpTo) {}
+
+    private EquComponent joinComponents(EquComponent last, EquComponent curr) {
+        if (last == null) // last does not exist.
+            return curr;
+        else if (!last.isComplete()){ // last is incomplete. ex: +(5,null)    *(2.3,null). Must be a linked component.
+            ((EquLinkedComponent) last).setNext(curr); //curr must be complete by operation check.
+            return last;
+        }
+
+        if(last.isComplete() && curr.isComplete()){
+            if (last instanceof EquLinkedComponent)
+                return joinComponentsWithOrder((EquLinkedComponent)last, curr);
+
+            EquLinkedComponent product = new EquLinkedComponent(Operations.MUL, last);
+            product.setNext(curr);
+            return product;
+        }
+        //last.isComplete && !curr.isComplete or both incomplete checked during operation creation
+            throw new EquationError("Unknown error, last it :"+ last.isComplete() + " and curr is: " + curr.isComplete());
+
+    }
+
+    private EquComponent joinComponentsWithOrder(EquLinkedComponent last, EquComponent curr){
+
+        EquLinkedComponent product = new EquLinkedComponent(Operations.MUL, last.getNext());
+        product.setNext(curr);
+        last.setNext(product);
+        product.setPrev(last);
+
+        return product;
+    }
 
     private ComponentTuple getConstant(int i){
         int jumpTo = 0;
@@ -140,7 +219,7 @@ public class EquLinkedComponentSolver implements Solver {
                         throw new EquationError("Constant decleration is empty.");
                     real = Double.parseDouble(equation.substring(pointer, j));
                 }
-                jumpTo = j + 1;
+                jumpTo = j;
             break;
             }
             if ((contains(equation.charAt(j), specialChars) || contains(equation.charAt(j), operationChars)) && equation.charAt(j) != '-')
@@ -148,6 +227,27 @@ public class EquLinkedComponentSolver implements Solver {
         }
         return new ComponentTuple(new EquConstantComponent(new ComplexBasic(real, imag)), jumpTo);
     }
+
+    private ComponentTuple getVariable(int i) {
+        int jumpTo = 0;
+        int pointer = i + 1;
+        EquVariableComponent varComp = null;
+        for (int j = i + 1; j < equation.length(); j++) {
+            if (contains(equation.charAt(j), operationChars) || contains(equation.charAt(j), specialChars)){
+                if (pointer == j)
+                    throw new EquationError("No number provided for variable decleration.");
+                jumpTo = j;
+                break;
+            } else if (j == equation.length() - 1) {
+                jumpTo = j+1;
+            }
+        }
+        if (pointer == jumpTo)
+            throw new EquationError("No number provided for variable decleration.");
+        varComp = new EquVariableComponent(variables, Integer.parseInt(equation.substring(pointer, jumpTo)));
+        return new ComponentTuple(varComp, jumpTo - 1);
+    }
+
     private boolean contains(char c, char[] array) {
         for (char x : array) {
             if (x == c) {
@@ -155,5 +255,10 @@ public class EquLinkedComponentSolver implements Solver {
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString(){
+        return equationLink.toString();
     }
 }
