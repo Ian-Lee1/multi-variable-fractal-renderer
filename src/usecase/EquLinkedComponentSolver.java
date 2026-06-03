@@ -13,7 +13,7 @@ public class EquLinkedComponentSolver implements Solver {
 
 
     private final char[] operationChars = {'+', '-', '*', '/', '^'};
-    private final char[] specialChars = {'c', 'v', '(', ')'};
+    private final char[] specialChars = {'c', 'v', '(', ')', 'F'};
 
     public EquLinkedComponentSolver(){
         this.variables = new ArrayList<>();
@@ -92,6 +92,7 @@ public class EquLinkedComponentSolver implements Solver {
             throw new EquationError("Equation for variable " + i + " is empty.");
         if (equations.get(i).charAt(0) == '-')
             equations.set(i, "c(0)" + equations.get(i));
+        equations.set(i, "(" + equations.get(i) + ")");
         ComponentTuple temp = compileRecursive(0, equations.get(i));
         this.equLinks.set(i, temp.component);
     }
@@ -109,6 +110,9 @@ public class EquLinkedComponentSolver implements Solver {
                 lastTerm = temp.component;
                 i = temp.jumpTo;
             }
+            else if (!("" + equation.charAt(i)).matches("\\d+"))
+                throw new EquationError("Unexpected letter " + equation.charAt(i) +".");
+
             i++;
 
         }
@@ -147,9 +151,10 @@ public class EquLinkedComponentSolver implements Solver {
         return newComponent;
     }
 
-
+    private record FunctionTuple(Functions func, int jumpTo) {}
     private ComponentTuple processSpecial(EquComponent lastTerm, int i, int starting, String equation){
         ComponentTuple temp;
+        Functions func = Functions.NONE;
         switch (equation.charAt(i)){
             case 'c':
                 temp = getConstant(i, equation);
@@ -161,9 +166,13 @@ public class EquLinkedComponentSolver implements Solver {
                 lastTerm = joinComponents(lastTerm, temp.component);
                 i = temp.jumpTo;
                 break;
+            case 'F':
+               FunctionTuple ft = getFunction(i+1, equation.toLowerCase());
+               func = ft.func;
+               i = ft.jumpTo;
             case '(':
                 temp = compileRecursive(i+1, equation);
-                EquParenthesisComponent parenthesis = new EquParenthesisComponent(temp.component);
+                EquParenthesisComponent parenthesis = new EquParenthesisComponent(temp.component, func);
                 lastTerm = joinComponents(lastTerm, parenthesis);
                 i = temp.jumpTo;
                 break;
@@ -174,6 +183,23 @@ public class EquLinkedComponentSolver implements Solver {
         }
         return new ComponentTuple(lastTerm, i);
     }
+
+    private FunctionTuple getFunction(int i, String equation){
+            if (equation.startsWith("sin(", i)){
+                return new FunctionTuple(Functions.SIN, i+3);
+            } else if (equation.startsWith("cos(", i)){
+                return new FunctionTuple(Functions.COS, i+3);
+            } else if (equation.startsWith("tan(", i)){
+                return new FunctionTuple(Functions.TAN, i+3);
+            } else if (equation.startsWith("len(", i)){
+                return new FunctionTuple(Functions.LEN, i+3);
+            } else if (equation.startsWith("len2(", i)){
+                return new FunctionTuple(Functions.LEN2, i+4);
+            } else if (equation.startsWith("sqrt(", i)){
+                return new FunctionTuple(Functions.SQRT, i+4);
+            } else throw new EquationError("Unknown function in equation.");
+    }
+
 
     private EquComponent findRootTerm(EquComponent lastTerm){
         if (!(lastTerm instanceof EquLinkedComponent) || ((EquLinkedComponent) lastTerm).getPrev() == null)
@@ -194,7 +220,7 @@ public class EquLinkedComponentSolver implements Solver {
 
     }
 
-    public record ComponentTuple(EquComponent component, int jumpTo) {}
+    private record ComponentTuple(EquComponent component, int jumpTo) {}
 
     private EquComponent joinComponents(EquComponent last, EquComponent curr) {
         if (last == null) // last does not exist.
@@ -248,7 +274,7 @@ public class EquLinkedComponentSolver implements Solver {
                 pointer = j + 1;
                 hasReal = true;
             }
-            if (equation.charAt(j) == 'i') {
+            else if (equation.charAt(j) == 'i') {
                 if (pointer >= j)
                     throw new EquationError("Invalid constant formatting. i is included but missing imaginary component.");
                 if (equation.charAt(j + 1) != ')')
@@ -256,7 +282,7 @@ public class EquLinkedComponentSolver implements Solver {
                 imag = Double.parseDouble(equation.substring(pointer, j));
                 pointer = j;
             }
-            if (equation.charAt(j) == ')') {
+            else if (equation.charAt(j) == ')') {
                 if (pointer == i+2){
                     if (pointer >= j)
                         throw new EquationError("Constant decleration is empty.");
@@ -265,8 +291,8 @@ public class EquLinkedComponentSolver implements Solver {
                 jumpTo = j;
             break;
             }
-            if ((contains(equation.charAt(j), specialChars) || contains(equation.charAt(j), operationChars)) && equation.charAt(j) != '-')
-                throw new EquationError("Invalid constant formatting. Contains invalid symbol: " + equation.charAt(j));
+            else if (!("" + equation.charAt(j)).matches("\\d+")&& equation.charAt(j) != '.' && equation.charAt(j) != '-')
+                throw new EquationError("Unexpected letter " + equation.charAt(j) +".");
         }
         return new ComponentTuple(new EquConstantComponent(new ComplexBasic(real, imag)), jumpTo);
     }
@@ -281,7 +307,9 @@ public class EquLinkedComponentSolver implements Solver {
                     throw new EquationError("No number provided for variable decleration.");
                 jumpTo = j;
                 break;
-            } else if (j == equation.length() - 1) {
+            } else if (!("" + equation.charAt(j)).matches("\\d+"))
+                throw new EquationError("Unexpected letter " + equation.charAt(j) +".");
+            else if (j == equation.length() - 1) {
                 jumpTo = j+1;
             }
         }
@@ -302,7 +330,7 @@ public class EquLinkedComponentSolver implements Solver {
 
     @Override
     public String toString(){
-        if (equations.size() == 0)
+        if (equations.isEmpty())
             return "Solver has " + variables.size() + " variables and no equations.";
         String str = "Variables: \n";
         for(int i = 0; i < variables.size(); i++){
