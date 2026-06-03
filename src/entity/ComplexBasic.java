@@ -43,6 +43,8 @@ public class ComplexBasic implements Complex{
         double modulus = Math.sqrt(this.r * this.r + this.i * this.i);
         double logI = Math.atan2(this.i, this.r);
 
+        if (modulus == 0.0)
+            return new ComplexBasic(0,0);
         // Natural log of this complex number: ln(z) = ln|z| + i*arg
         double logR = Math.log(modulus);
 
@@ -67,6 +69,52 @@ public class ComplexBasic implements Complex{
     @Override
     public double getI() {
         return i;
+    }
+
+    @Override
+    public double lengthSq(){
+        return r*r + i*i;
+    }
+
+    @Override
+    public Complex sin() {
+        // sin(a + bi) = sin(a)cosh(b) + i cos(a)sinh(b)
+        double real = Math.sin(this.r) * Math.cosh(this.i);
+        double imag = Math.cos(this.r) * Math.sinh(this.i);
+        return new ComplexBasic(real, imag);
+    }
+
+    @Override
+    public Complex cos() {
+        // cos(a + bi) = cos(a)cosh(b) - i sin(a)sinh(b)
+        double real = Math.cos(this.r) * Math.cosh(this.i);
+        double imag = -Math.sin(this.r) * Math.sinh(this.i);
+        return new ComplexBasic(real, imag);
+    }
+
+    @Override
+    public Complex tan(){
+        return sin().div(cos());
+    }
+
+    @Override
+    public Complex sqrt() {
+        double modulus = Math.sqrt(this.r * this.r + this.i * this.i);
+
+        double real = Math.sqrt((modulus + this.r) / 2.0);
+        double imag = Math.sqrt((modulus - this.r) / 2.0);
+
+        // Preserve the sign of the imaginary part
+        if (this.i < 0) {
+            imag = -imag;
+        }
+
+        return new ComplexBasic(real, imag);
+    }
+
+    @Override
+    public String toString(){
+        return "(" + r + "," + i + "i" + ")";
     }
 
 }

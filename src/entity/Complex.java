@@ -6,6 +6,12 @@ public interface Complex {
     Complex mul(Complex x);
     Complex div(Complex x);
     Complex pow(Complex x);
+    Complex sin();
+    Complex cos();
+    Complex tan();
+    Complex sqrt();
     double getR();
     double getI();
+    double lengthSq();
+
 }

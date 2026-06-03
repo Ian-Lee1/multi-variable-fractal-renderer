@@ -9,11 +9,11 @@ public enum Operations {
     @Override
     public String toString() {
         return switch (name()) {
-            case "ADD" -> "add/+";
-            case "SUB" -> "sub/-";
-            case "MUL" -> "multiply/*";
-            case "DIV" -> "divide/ /";
-            case "POW" -> "power/^";
+            case "ADD" -> "+";
+            case "SUB" -> "-";
+            case "MUL" -> "*";
+            case "DIV" -> "/";
+            case "POW" -> "^";
             default -> super.toString();
         };
     }
