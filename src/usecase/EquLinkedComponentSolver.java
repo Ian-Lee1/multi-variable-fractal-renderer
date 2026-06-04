@@ -4,9 +4,10 @@ import entity.*;
 
 import java.util.ArrayList;
 
-public class EquLinkedComponentSolver implements Solver {
+public class EquLinkedComponentSolver implements Solver, SolverHasDefault {
     private final ArrayList<Complex> variables;
     private final ArrayList<Complex> tempVariables;
+    private final ArrayList<Complex> variablesDefault;
     private final ArrayList<Integer> variableAddress;
     private final ArrayList<String> equations;
     private final ArrayList<EquComponent> equLinks;
@@ -21,6 +22,7 @@ public class EquLinkedComponentSolver implements Solver {
         this.equLinks = new ArrayList<>();
         this.tempVariables = new ArrayList<>();
         this.variableAddress = new ArrayList<>();
+        this.variablesDefault = new ArrayList<>();
     }
     @Override
     public void setEquation(int i, String equation) throws EquationError {
@@ -35,12 +37,45 @@ public class EquLinkedComponentSolver implements Solver {
             index = equations.size();
             equations.add(equation);
             tempVariables.add(new ComplexBasic(0,0));
+            variablesDefault.add(new ComplexBasic(0,0));
             equLinks.add(null);
             variableAddress.add(i);
         }
         compile(index);
     }
 
+    public void setDefault(int i, Complex value){
+        if (variableAddress.contains(i)) {
+            int index = variableAddress.indexOf(i);
+            variablesDefault.set(index, value);
+        }
+        else
+            updateVariable(i, value);
+    }
+
+    public void resetVariable(){
+        for (int i = 0; i < equations.size(); i++){
+            variables.set(variableAddress.get(i), variablesDefault.get(i));
+        }
+    }
+
+    public Complex getDefault(int i){
+        if (variableAddress.contains(i)) {
+            int index = variableAddress.indexOf(i);
+            return variablesDefault.get(index);
+        }
+        else
+            return readVariable(i);
+    }
+
+    public String getEquation(int i){
+        if (variableAddress.contains(i)) {
+            int index = variableAddress.indexOf(i);
+            return equations.get(index);
+        }
+        else
+            return "";
+    }
     @Override
     public void updateVariable(int i, Complex value) {
         try {
@@ -61,6 +96,7 @@ public class EquLinkedComponentSolver implements Solver {
                 int index = variableAddress.indexOf(i);
                 variableAddress.remove(index);
                 tempVariables.remove(index);
+                variablesDefault.remove(index);
                 equLinks.remove(index);
                 equations.remove(index);
             }
@@ -72,7 +108,7 @@ public class EquLinkedComponentSolver implements Solver {
     @Override
     public void solve() {
         for(int i = 0; i < equations.size(); i++){
-            tempVariables.set(i, equLinks.get(i).solve());
+                tempVariables.set(i, equLinks.get(i).solve());
         }
         for(int i = 0; i < equations.size(); i++){
             variables.set(variableAddress.get(i), tempVariables.get(i));
@@ -88,13 +124,28 @@ public class EquLinkedComponentSolver implements Solver {
     }
 
     private void compile(int i){
-        if (equations.get(i).isEmpty())
-            throw new EquationError("Equation for variable " + i + " is empty.");
+        if (equations.get(i).isEmpty()) {
+            equations.remove(i);
+            equLinks.remove(i);
+            tempVariables.remove(i);
+            variableAddress.remove(i);
+            variables.set(i, variablesDefault.get(i));
+            variablesDefault.remove(i);
+            return;
+        }
+        if (equations.get(i).startsWith("Broken equation!"))
+            equations.set(i, equations.get(i).substring(16));
         if (equations.get(i).charAt(0) == '-')
             equations.set(i, "c(0)" + equations.get(i));
-        equations.set(i, "(" + equations.get(i) + ")");
-        ComponentTuple temp = compileRecursive(0, equations.get(i));
-        this.equLinks.set(i, temp.component);
+        equations.set(i, equations.get(i));
+        try{
+            ComponentTuple temp = compileRecursive(0, equations.get(i));
+            this.equLinks.set(i, temp.component);
+        }catch (EquationError e){
+            equations.set(i, "Broken equation!" + equations.get(i));
+            throw e;
+        }
+
     }
     private ComponentTuple compileRecursive(int starting, String equation) {
         EquComponent lastTerm = null;
@@ -263,6 +314,8 @@ public class EquLinkedComponentSolver implements Solver {
             throw new EquationError("Constant decleration should start with (");
 
         for(int j = i+2; j < equation.length(); j++) {
+            if (j == equation.length() - 1 && equation.charAt(j) != ')')
+                throw new EquationError("Unclosed constant decleration.");
             if (equation.charAt(j) == ',') {
                 if (hasReal)
                     throw new EquationError("Invalid constant formatting. Must only contain one real component.");

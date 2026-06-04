@@ -10,4 +10,5 @@ public interface Solver {
     void removeVariable(int i);
     Complex readVariable(int i);
     void solve();
+    String getEquation(int i);
 }
