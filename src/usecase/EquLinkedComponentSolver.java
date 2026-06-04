@@ -131,6 +131,7 @@ public class EquLinkedComponentSolver implements Solver, SolverHasDefault {
             variableAddress.remove(i);
             variables.set(i, variablesDefault.get(i));
             variablesDefault.remove(i);
+            return;
         }
         if (equations.get(i).startsWith("Broken equation!"))
             equations.set(i, equations.get(i).substring(16));
