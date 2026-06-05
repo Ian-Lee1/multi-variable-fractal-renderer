@@ -49,6 +49,7 @@ public class AppBuilder {
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         fractalView.setMinimumSize(new Dimension(600, 800));
         fractalView.setPreferredSize(new Dimension(800, 800));
+        FractalRenderUsecase renderUsecase = new FractalRenderUsecase(fr);
 
         JLabel fractalLabel = new JLabel();
 
@@ -70,6 +71,7 @@ public class AppBuilder {
         fractalView.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                fractalView.grabFocus();
                 moveUsecase.setMousePos(e.getX(), e.getY());
                 presenter.updateImage();
                 fractalView.repaint();
@@ -87,15 +89,33 @@ public class AppBuilder {
         fractalView.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e){
-                if (e.getKeyChar() == 'w') {
+                if (e.getKeyChar() == 'w')
                     moveUsecase.moveByKey(0, -1);
-                } else if (e.getKeyChar() == 's') {
+                else if (e.getKeyChar() == 's')
                     moveUsecase.moveByKey(0, 1);
-                } else if (e.getKeyChar() == 'a') {
+                else if (e.getKeyChar() == 'a')
                     moveUsecase.moveByKey(-1, 0);
-                } else if (e.getKeyChar() == 'd') {
+                else if (e.getKeyChar() == 'd')
                     moveUsecase.moveByKey(1, 0);
+                else if (e.getKeyChar() == 'r')
+                    moveUsecase.changeRadius(-1);
+                else if (e.getKeyChar() == 'f')
+                    moveUsecase.changeRadius(1);
+                else if (e.getKeyChar() == 'z'){
+                    try{renderUsecase.renderMain();} catch (Exception er) {
+                        Popup popup = new Popup("Error!", er.getMessage(), fractalView.getLocationOnScreen());
+                    }
+                    presenter.updateImage();
+                    fractalView.repaint();
+                }                 else if (e.getKeyChar() == 'x'){
+                    try{renderUsecase.renderPreview();} catch (Exception er) {
+                        Popup popup = new Popup("Error!", er.getMessage(), fractalView.getLocationOnScreen());
+                    }
+                    presenter.updateImage();
+                    fractalView.repaint();
                 }
+
+
                 presenter.updateImage();
                 fractalView.repaint();
             }
@@ -124,12 +144,19 @@ public class AppBuilder {
 
         FractalRenderUsecase renderUsecase = new FractalRenderUsecase(fr);
         renderMainButton.addActionListener(_ -> {
-            renderUsecase.renderMain();
+
+
+            try{renderUsecase.renderMain();} catch (Exception e) {
+                Popup popup = new Popup("Error!", e.getMessage(), renderMainButton.getLocationOnScreen());
+            }
             presenter.updateImage();
             fractalView.repaint();
         });
         renderPrevButton.addActionListener(_ -> {
-            renderUsecase.renderPreview();
+
+            try{renderUsecase.renderPreview();} catch (Exception e) {
+                Popup popup = new Popup("Error!", e.getMessage(), renderPrevButton.getLocationOnScreen());
+            }
             presenter.updateImage();
             fractalView.repaint();
         });
@@ -222,7 +249,6 @@ public class AppBuilder {
 
         variablePanel.setVisible(false);
         panel.add(settings);
-        deleteButton.setEnabled(false);
         return this;
     }
 
