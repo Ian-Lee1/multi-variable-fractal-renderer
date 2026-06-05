@@ -108,7 +108,8 @@ public class EquLinkedComponentSolver implements Solver, SolverHasDefault {
     @Override
     public void solve() {
         for(int i = 0; i < equations.size(); i++){
-                tempVariables.set(i, equLinks.get(i).solve());
+                try{tempVariables.set(i, equLinks.get(i).solve());}
+                catch(EquationError e){throw new EquationError("Equation " + variableAddress.get(i) + " produced error:" + e.getMessage());}
         }
         for(int i = 0; i < equations.size(); i++){
             variables.set(variableAddress.get(i), tempVariables.get(i));
