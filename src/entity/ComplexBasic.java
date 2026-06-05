@@ -27,13 +27,13 @@ public class ComplexBasic implements Complex{
 
     @Override
     public Complex div(Complex x) {
-        // (a + bi) / (c + di) = [(ac + bd) / (c^2 + d^2)] + [(bc - ad) / (c^2 + d^2)]i
         double denominator = x.getR() * x.getR() + x.getI() * x.getI();
         if (denominator == 0) {
-            throw new EquationError("Division by zero in complex division");
+            return new ComplexBasic(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
         }
         double real = (this.r * x.getR() + this.i * x.getI()) / denominator;
         double imag = (this.i * x.getR() - this.r * x.getI()) / denominator;
+
         return new ComplexBasic(real, imag);
     }
 

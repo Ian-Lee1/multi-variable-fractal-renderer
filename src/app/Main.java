@@ -7,7 +7,11 @@ public final class Main {
     AppBuilder appBuilder = new AppBuilder();
     JFrame application = appBuilder
             .addVariableFrame()
+            .addSettingsButton()
+            .constructFractalRenderer()
+            .addFractalControlFrame()
             .addFractalView()
+
             .build();
     application.pack();
     application.setLocationRelativeTo(null);
