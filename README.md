@@ -30,9 +30,8 @@ The thrid text box sets a variable's equation.
               - v0: empty
               - v1: default:0,0i equation: v1^c(2)+v0
         - Julia set:
-              - v0: equation: v0^c(2)+v2
+              - v0: equation: v0^c(2)+c(0.3,0.6i)
               - v1: default: 0,0i equation: v0
-              - v2: default: 0.3, 0.6i
 
   - Rendering:
         - render using the main and preview buttons.
