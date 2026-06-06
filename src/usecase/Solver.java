@@ -9,6 +9,7 @@ public interface Solver {
     void addVariable();
     void removeVariable(int i);
     Complex readVariable(int i);
+    int getVariableCount();
     void solve();
     String getEquation(int i);
 }
