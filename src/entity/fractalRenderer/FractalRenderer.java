@@ -5,8 +5,11 @@ import entity.ComplexBasic;
 import usecase.Solver;
 import usecase.SolverHasDefault;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class FractalRenderer {
     private Complex center;
@@ -195,5 +198,10 @@ public class FractalRenderer {
         }
     }
 
-
+    public void screenshot(String path, String name) throws IOException {
+            if (name.isEmpty())
+                name = "" + (int)(99999999*Math.random());
+            File outputFile = new File(path + name + ".png");
+            ImageIO.write(screen, "png", outputFile);
+    }
 }

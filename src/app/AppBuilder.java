@@ -18,6 +18,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 public class AppBuilder {
     private final JPanel panel = new JPanel();
@@ -33,6 +34,11 @@ public class AppBuilder {
     private DeleteVariableUsecase deleteVariableUsecase;
     private ChangeVariableDefaultUsecase changeDefault;
     private SetEquationUsecase setEquationUsecase;
+
+
+    private JTextField screenshotPath = new JTextField(15);
+    private JTextField screenshotName = new JTextField(15);
+    private JButton screenshotButton = new JButton("Screenshot");
 
     private JComboBox<Integer> bailDropdown = new JComboBox<>();
     public AppBuilder() {
@@ -189,10 +195,10 @@ public class AppBuilder {
         JPanel mid = new JPanel();
         JPanel bottom = new JPanel();
 
-        mid.setPreferredSize(new Dimension(200, 40));
-        mid.setMaximumSize(new Dimension(200, 40));
-        bottom.setPreferredSize(new Dimension(200, 40));
-        bottom.setMaximumSize(new Dimension(200, 40));
+        mid.setPreferredSize(new Dimension(200, 30));
+        mid.setMaximumSize(new Dimension(200, 30));
+        bottom.setPreferredSize(new Dimension(200, 30));
+        bottom.setMaximumSize(new Dimension(200, 30));
         JLabel txtIteration = new JLabel("Max iter");
         JLabel txtBVariable = new JLabel("Bail var");
         JTextField fieldIteration = new JTextField(3);
@@ -251,10 +257,35 @@ public class AppBuilder {
         bottom.add(fieldMax);
 
 
+        JPanel screenshotPathPanel = new JPanel();
+        JPanel screenshotNamePanel = new JPanel();
+        JLabel screenshotLabel = new JLabel("Screenshot:");
+        JLabel screenshotPathLabel = new JLabel("Path:");
+        JLabel screenshotNameLabel = new JLabel("Name:");
+
+        screenshotButton.addActionListener(_ -> {
+            try{
+                fr.screenshot(screenshotPath.getText(), screenshotName.getText());
+            } catch (IOException e) {
+                Popup _ = new Popup("Error", "Screenshot path or name is invalid.", screenshotButton.getLocationOnScreen());
+            }
+        });
+        screenshotPath.setText("C:/Users/User/Desktop/");
+        screenshotPathPanel.add(screenshotPathLabel);
+        screenshotPathPanel.add(screenshotPath);
+        screenshotNamePanel.add(screenshotNameLabel);
+        screenshotNamePanel.add(screenshotName);
+        screenshotPathPanel.setPreferredSize(new Dimension(200, 30));
+        screenshotPathPanel.setMaximumSize(new Dimension(200, 30));
+        screenshotNamePanel.setPreferredSize(new Dimension(200, 30));
+        screenshotNamePanel.setMaximumSize(new Dimension(200, 30));
         fractalPanel.setLayout(new BoxLayout(fractalPanel, BoxLayout.Y_AXIS));
         fractalPanel.add(mid);
         fractalPanel.add(bottom);
         fractalPanel.add(textPanel);
+        fractalPanel.add(screenshotLabel);
+        fractalPanel.add(screenshotPathPanel);
+        fractalPanel.add(screenshotNamePanel);
         fractalPanel.setVisible(false);
         settings.add(fractalPanel);
         return this;
@@ -347,6 +378,7 @@ public class AppBuilder {
         });
         settings.setLayout(new BoxLayout(settings, BoxLayout.Y_AXIS));
         settings.add(settingsButton);
+        settings.add(screenshotButton);
         return this;
     }
 
