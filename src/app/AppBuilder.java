@@ -6,6 +6,7 @@ import presenter.VariablePresenter;
 import usecase.EquLinkedComponentSolver;
 import usecase.Solver;
 import usecase.SolverHasDefault;
+import usecase.fractal.FractalBailUsecase;
 import usecase.fractal.FractalMoveUsecase;
 import usecase.fractal.FractalRenderUsecase;
 import usecase.variable.AddVariableUsecase;
@@ -17,6 +18,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 public class AppBuilder {
     private final JPanel panel = new JPanel();
@@ -27,7 +29,18 @@ public class AppBuilder {
     final JPanel fractalPanel = new JPanel();
     final ImageIcon fractalImage = new ImageIcon();
     private FractalRenderer fr;
+    private VariablePresenter variablePresenter;
+    private AddVariableUsecase addVariableUsecase;
+    private DeleteVariableUsecase deleteVariableUsecase;
+    private ChangeVariableDefaultUsecase changeDefault;
+    private SetEquationUsecase setEquationUsecase;
 
+
+    private JTextField screenshotPath = new JTextField(15);
+    private JTextField screenshotName = new JTextField(15);
+    private JButton screenshotButton = new JButton("Screenshot");
+
+    private JComboBox<Integer> bailDropdown = new JComboBox<>();
     public AppBuilder() {
         //final BorderLayout borderLayout = new BorderLayout();
         //panel.setLayout(borderLayout);
@@ -125,8 +138,23 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addDefaultVariables(){
+        addVariableUsecase.addVariable();
+        addVariableUsecase.addVariable();
+        addVariableUsecase.addVariable();
+        addVariableUsecase.addVariable();
+        addVariableUsecase.addVariable();
+        setEquationUsecase.setEquation(1, "v2+v3");
+        setEquationUsecase.setEquation(2, "v2^c(2)+v0");
+        setEquationUsecase.setEquation(3, "v3^c(2)+c(0.3,0.6)+v0*v4");
+        setEquationUsecase.setEquation(4, "c(0)");
+        changeDefault.changeDefault(4, "1", "0");
+        bailDropdown.setSelectedItem(1);
+        variablePresenter.updateFields();
+        return this;
+    }
     public AppBuilder constructFractalRenderer(){
-        fr = new FractalRenderer(800, 800, solver);
+        fr = new FractalRenderer(800, 800, 1, 4, 0.00001, solver);
         return this;
     }
 
@@ -162,8 +190,103 @@ public class AppBuilder {
         });
 
 
+        FractalBailUsecase bail = new FractalBailUsecase(fr);
+
+        JPanel mid = new JPanel();
+        JPanel bottom = new JPanel();
+
+        mid.setPreferredSize(new Dimension(200, 30));
+        mid.setMaximumSize(new Dimension(200, 30));
+        bottom.setPreferredSize(new Dimension(200, 30));
+        bottom.setMaximumSize(new Dimension(200, 30));
+        JLabel txtIteration = new JLabel("Max iter");
+        JLabel txtBVariable = new JLabel("Bail var");
+        JTextField fieldIteration = new JTextField(3);
+
+
+        JLabel txtMinAmt = new JLabel("Bail min");
+        JLabel txtMaxAmt = new JLabel("max");
+        JTextField fieldMin = new JTextField(3);
+        JTextField fieldMax = new JTextField(3);
+
+        fieldIteration.setText("50");
+        bail.setMaxIteration(50);
+        fieldMin.setText("0.001");
+        bail.changeBailMin(0.001);
+        fieldMax.setText("4");
+        bail.changeBailMax(4);
+
+        fieldIteration.addActionListener(_ -> {
+            try{
+                bail.setMaxIteration(Integer.parseInt(fieldIteration.getText()));
+
+            } catch (Exception e) {
+                Popup popup = new Popup("Error", "Invalid input. Max iteration must be a positive integer.", fieldIteration.getLocationOnScreen());
+            }
+        });
+
+        bailDropdown.addActionListener(_ -> bail.changeBailVariable((int)bailDropdown.getSelectedItem()));
+
+        fieldMin.addActionListener(_ -> {
+            try{
+                bail.changeBailMin(Double.parseDouble(fieldMin.getText()));
+
+            } catch (Exception e) {
+                Popup popup = new Popup("Error", "Invalid input. Bail min must be a double.", fieldMin.getLocationOnScreen());
+            }
+        });
+        fieldMax.addActionListener(_ -> {
+            try{
+                bail.changeBailMax(Double.parseDouble(fieldMax.getText()));
+
+            } catch (Exception e) {
+                Popup popup = new Popup("Error", "Invalid input. Bail max must be a double.", fieldMin.getLocationOnScreen());
+            }
+        });
+
+
+        mid.add(txtIteration);
+        mid.add(fieldIteration);
+
+        mid.add(txtBVariable);
+        mid.add(bailDropdown);
+
+        bottom.add(txtMinAmt);
+        bottom.add(fieldMin);
+        bottom.add(txtMaxAmt);
+        bottom.add(fieldMax);
+
+
+        JPanel screenshotPathPanel = new JPanel();
+        JPanel screenshotNamePanel = new JPanel();
+        JLabel screenshotLabel = new JLabel("Screenshot:");
+        JLabel screenshotPathLabel = new JLabel("Path:");
+        JLabel screenshotNameLabel = new JLabel("Name:");
+
+        screenshotButton.addActionListener(_ -> {
+            try{
+                fr.screenshot(screenshotPath.getText(), screenshotName.getText());
+            } catch (IOException e) {
+                Popup _ = new Popup("Error", "Screenshot path or name is invalid.", screenshotButton.getLocationOnScreen());
+            }
+        });
+        screenshotPath.setText("C:/Users/User/Desktop/");
+        screenshotPathPanel.add(screenshotPathLabel);
+        screenshotPathPanel.add(screenshotPath);
+        screenshotNamePanel.add(screenshotNameLabel);
+        screenshotNamePanel.add(screenshotName);
+        screenshotPathPanel.setPreferredSize(new Dimension(200, 30));
+        screenshotPathPanel.setMaximumSize(new Dimension(200, 30));
+        screenshotNamePanel.setPreferredSize(new Dimension(200, 30));
+        screenshotNamePanel.setMaximumSize(new Dimension(200, 30));
         fractalPanel.setLayout(new BoxLayout(fractalPanel, BoxLayout.Y_AXIS));
+        fractalPanel.add(mid);
+        fractalPanel.add(bottom);
         fractalPanel.add(textPanel);
+        fractalPanel.add(screenshotLabel);
+        fractalPanel.add(screenshotPathPanel);
+        fractalPanel.add(screenshotNamePanel);
+        fractalPanel.setVisible(false);
         settings.add(fractalPanel);
         return this;
     }
@@ -183,17 +306,20 @@ public class AppBuilder {
         defaultR.setText("0.0");
 
         final JComboBox<Integer> dropdown = new JComboBox<>();
-        VariablePresenter variablePresenter;
-        if (solver instanceof SolverHasDefault)
-            variablePresenter = new VariablePresenter((SolverHasDefault)solver, dropdown, deleteButton, defaultR, defaultI, equationField);
+        if (solver instanceof SolverHasDefault) {
+            variablePresenter = new VariablePresenter((SolverHasDefault) solver, dropdown, deleteButton, defaultR, defaultI, equationField);
+            variablePresenter.setBailDropdown(bailDropdown);
+        }
         else {
             variablePresenter = null;
             throw new RuntimeException("Bad builder");
         }
-        final AddVariableUsecase addVariableUsecase = new AddVariableUsecase(solver, variablePresenter);
-        final DeleteVariableUsecase deleteVariableUsecase = new DeleteVariableUsecase(solver, variablePresenter);
-        final ChangeVariableDefaultUsecase changeDefault = new ChangeVariableDefaultUsecase(solver);
-        final SetEquationUsecase setEquationUsecase = new SetEquationUsecase(solver);
+
+        addVariableUsecase = new AddVariableUsecase(solver, variablePresenter);
+        deleteVariableUsecase = new DeleteVariableUsecase(solver, variablePresenter);
+        changeDefault = new ChangeVariableDefaultUsecase(solver);
+        setEquationUsecase = new SetEquationUsecase(solver);
+
 
         addButton.addActionListener(_ -> addVariableUsecase.addVariable());
         deleteButton.addActionListener(_ -> deleteVariableUsecase.delete((int)dropdown.getSelectedItem()));
@@ -217,14 +343,6 @@ public class AppBuilder {
                 equationField.setForeground(Color.red);
                 Popup popup = new Popup("Error", e.getMessage(), panel.getLocationOnScreen());
             }});
-
-        addVariableUsecase.addVariable();
-        addVariableUsecase.addVariable();
-        addVariableUsecase.addVariable();
-        setEquationUsecase.setEquation(1, "v1^v2+v0");
-        setEquationUsecase.setEquation(2, "v2^v1-v0");
-        variablePresenter.updateFields();
-
 
         variableTopPanel.setLayout(new BoxLayout(variableTopPanel, BoxLayout.X_AXIS));
         variableTopPanel.add(new JLabel("Variable:"));
@@ -258,9 +376,9 @@ public class AppBuilder {
             variablePanel.setVisible(settingsButton.isSelected());
             fractalPanel.setVisible(settingsButton.isSelected());
         });
-        settings.add(settingsButton);
         settings.setLayout(new BoxLayout(settings, BoxLayout.Y_AXIS));
         settings.add(settingsButton);
+        settings.add(screenshotButton);
         return this;
     }
 
