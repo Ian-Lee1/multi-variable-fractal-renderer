@@ -124,6 +124,11 @@ public class EquLinkedComponentSolver implements Solver, SolverHasDefault {
         return variables.get(i);
     }
 
+    @Override
+    public int getVariableCount(){
+        return variables.size();
+    }
+
     private void compile(int i){
         if (equations.get(i).isEmpty()) {
             equations.remove(i);

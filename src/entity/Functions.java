@@ -7,6 +7,8 @@ public enum Functions {
     LEN,
     LEN2,
     SQRT,
+    GETR,
+    GETI,
     NONE;
     @Override
     public String toString() {

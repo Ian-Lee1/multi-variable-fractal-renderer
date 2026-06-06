@@ -2,6 +2,7 @@ package entity.fractalRenderer;
 
 import entity.Complex;
 import entity.ComplexBasic;
+import entity.EquationError;
 import usecase.Solver;
 import usecase.SolverHasDefault;
 
@@ -29,9 +30,9 @@ public class FractalRenderer {
     private BufferedImage screen, main, preview;
     private Solver solver;
     
-    private Solver Colorsolver;
+    private Solver colorSolver;
 
-    public FractalRenderer(int w, int h, int bVar, double bAmt, double minChange, Solver solver){
+    public FractalRenderer(int w, int h, int bVar, double bAmt, double minChange, Solver solver, Solver colorSolver){
         this.width = w;
         this.height = h;
         this.iterations = 50;
@@ -40,6 +41,7 @@ public class FractalRenderer {
         this.minChange = minChange;
         this.solver = solver;
         this.previewFactor = 3;
+        this.colorSolver = colorSolver;
         screen = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         main = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         preview = new BufferedImage(w/previewFactor, h/previewFactor, BufferedImage.TYPE_3BYTE_BGR);
@@ -185,16 +187,30 @@ public class FractalRenderer {
                     }
                     last = solver.readVariable(bailVariable);
                 }
-//                    int cr = Math.abs((int)(240+solver.readVariable(1).getR())%250);
-//                    int cg = Math.abs((240+((int)(solver.readVariable(1).getI())^2) + ((int)(solver.readVariable(1).getR())^2))%250);
-//                    int cb = Math.abs((int)(240+solver.readVariable(1).getI())%250);
-                    g.setColor(new Color((int)(255*ratio),(int)(230*ratio), (int)(155*ratio)));
+                    copyVariableToColorSolver(ratio);
+                    try{colorSolver.solve();} catch (Exception e) {
+                        String colorTxt;
+                        if (e.getMessage().startsWith("Variable 0"))
+                            colorTxt = "Red";
+                        else if (e.getMessage().startsWith("Variable 1"))
+                            colorTxt = "Green";
+                        else
+                            colorTxt = "Blue";
+                        throw new EquationError(colorTxt + e.getMessage().substring(10));
+                    }
+                    g.setColor(new Color((int)(Math.clamp(colorSolver.readVariable(0).getR(), 0, 255)), (int)(Math.clamp(colorSolver.readVariable(1).getR(), 0, 255)), (int)(Math.clamp(colorSolver.readVariable(2).getR(), 0, 255))));
                     g.drawRect(x, y, 1, 1);
 
-                //TODO implement color equations. with new solver?
                 r += dx;
             }
             i += dy;
+        }
+    }
+
+    private void copyVariableToColorSolver(double ratio){
+        colorSolver.updateVariable(0, new ComplexBasic(ratio, 0));
+        for (int i = 1; i < solver.getVariableCount(); i++){
+            colorSolver.updateVariable(i, solver.readVariable(i));
         }
     }
 
