@@ -14,17 +14,27 @@ public class FractalRenderer {
     private Complex mainCenter;
     private double mainRadius;
 
+    private int bailVariable;
+    private double bailAmount;
+    private double minChange;
+    
+
     private Complex previewCenter;
     private double previewRadius;
     private int width, height, iterations, previewFactor;
     private double radius;
     private BufferedImage screen, main, preview;
     private Solver solver;
+    
+    private Solver Colorsolver;
 
-    public FractalRenderer(int w, int h, Solver solver){
+    public FractalRenderer(int w, int h, int bVar, double bAmt, double minChange, Solver solver){
         this.width = w;
         this.height = h;
         this.iterations = 50;
+        this.bailAmount = bAmt;
+        this.bailVariable = bVar;
+        this.minChange = minChange;
         this.solver = solver;
         this.previewFactor = 3;
         screen = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
@@ -67,6 +77,19 @@ public class FractalRenderer {
     public void setHeight(int h){
         this.height = h;
     }
+
+    public void setBailVariable(int i){
+        this.bailVariable = i;
+    }
+
+    public void setBailMax(double m){
+        this.bailAmount = m;
+    }
+
+    public void setBailMin(double m){
+        this.minChange = m;
+    }
+
     public void setIterations(int i){
         this.iterations = i;
     }
@@ -141,21 +164,28 @@ public class FractalRenderer {
         double i = center.getI()-radius*radiusScale;
         double ratio;
         Graphics g = img.getGraphics();
+        Complex last;
         for (int y = 0; y < img.getHeight() ; y++){
             r = center.getR()-radius*radiusScale;
             for (int x = 0 ; x < img.getWidth(); x++){
-
                 ((SolverHasDefault)solver).resetVariable();
+                last = new ComplexBasic(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
                 solver.updateVariable(0, new ComplexBasic(r, i));
                 ratio = 1;
                 for(int iteration = 0; iteration < this.iterations; iteration++){
                     solver.solve();
-                    if (solver.readVariable(1).lengthSq() > 40000) {
-                        ratio = (1.0+iteration)/this.iterations;
+                    if (solver.readVariable(bailVariable).lengthSq() > bailAmount) {
+                        ratio = (0.0+iteration)/this.iterations;
+                        iteration = this.iterations;
+                    } else if(solver.readVariable(bailVariable).sub(last).lengthSq() < minChange){
                         iteration = this.iterations;
                     }
+                    last = solver.readVariable(bailVariable);
                 }
-                    g.setColor(new Color((int)(255*ratio), (int)(200*ratio), (int)(150*ratio)));
+//                    int cr = Math.abs((int)(240+solver.readVariable(1).getR())%250);
+//                    int cg = Math.abs((240+((int)(solver.readVariable(1).getI())^2) + ((int)(solver.readVariable(1).getR())^2))%250);
+//                    int cb = Math.abs((int)(240+solver.readVariable(1).getI())%250);
+                    g.setColor(new Color((int)(255*ratio),(int)(230*ratio), (int)(155*ratio)));
                     g.drawRect(x, y, 1, 1);
 
                 //TODO implement color equations. with new solver?

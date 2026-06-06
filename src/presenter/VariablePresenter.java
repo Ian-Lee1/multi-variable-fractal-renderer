@@ -9,6 +9,7 @@ import java.awt.*;
 public class VariablePresenter {
     private final SolverHasDefault solver;
     private final JComboBox<Integer> dropdown;
+    private JComboBox<Integer> bailDropdown;
     private final JButton deleteButton;
     private final JTextField defaultR;
     private final JTextField defaultI;
@@ -21,9 +22,17 @@ public class VariablePresenter {
         this.defaultR = dR;
         this.equation = eq;
     }
+
+    public void setBailDropdown(JComboBox dd){
+        this.bailDropdown = dd;
+    }
     public void addVariable(){
         this.dropdown.addItem(dropdown.getItemCount());
         this.dropdown.setSelectedItem(dropdown.getItemCount() - 1);
+        if (bailDropdown != null) {
+            bailDropdown.addItem(bailDropdown.getItemCount());
+        }
+
         deleteButton.setEnabled(true);
         this.defaultI.setText("0.0");
         this.defaultR.setText("0.0");
@@ -45,6 +54,11 @@ public class VariablePresenter {
     }
     public void removeVariable(){
         this.dropdown.removeItem(dropdown.getItemCount()-1);
+        if (bailDropdown != null) {
+            bailDropdown.removeItem(bailDropdown.getItemCount()-1);
+        }
+
+
         if (dropdown.getItemCount() == 1)
             deleteButton.setEnabled(false);
         updateFields();
