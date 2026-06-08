@@ -11,6 +11,7 @@ import usecase.fractal.FractalBailUsecase;
 import usecase.fractal.FractalMoveUsecase;
 import usecase.fractal.FractalRenderUsecase;
 import usecase.load.LoadFractalUsecase;
+import usecase.save.SaveFractalUsecase;
 import usecase.variable.AddVariableUsecase;
 import usecase.variable.ChangeVariableDefaultUsecase;
 import usecase.variable.DeleteVariableUsecase;
@@ -50,7 +51,7 @@ public class AppBuilder {
     public AppBuilder(String mainPath) {
         //final BorderLayout borderLayout = new BorderLayout();
         //panel.setLayout(borderLayout);
-        panel.setPreferredSize(new Dimension(800, 800));
+        panel.setPreferredSize(new Dimension(1000, 800));
         this.mainPath = mainPath;
     }
 
@@ -75,7 +76,6 @@ public class AppBuilder {
 
         FractalPresenter presenter = new FractalPresenter(fr, fractalImage);
         FractalMoveUsecase moveUsecase = new FractalMoveUsecase(fr);
-
 
         BufferedImage image = fr.getScreen();
 
@@ -135,12 +135,13 @@ public class AppBuilder {
                     fractalView.repaint();
                 }
 
-
                 presenter.updateImage();
                 fractalView.repaint();
             }
         });
-
+        fr.updateMain();
+        fr.updateScreen();
+        fractalView.repaint();
         panel.add(fractalView);
         return this;
     }
@@ -345,7 +346,7 @@ public class AppBuilder {
                 Popup _ = new Popup("Error", "Screenshot path or name is invalid.", screenshotButton.getLocationOnScreen());
             }
         });
-        screenshotPath.setText(mainPath + "/screenshots");
+        screenshotPath.setText(mainPath + "screenshots/");
         screenshotPathPanel.add(screenshotPathLabel);
         screenshotPathPanel.add(screenshotPath);
         screenshotNamePanel.add(screenshotNameLabel);
@@ -361,26 +362,40 @@ public class AppBuilder {
 
     private void addSaveLoadControls(){
         JLabel mainLabel = new JLabel("Saving Loading:");
-        JPanel saveloadFieldPanel = new JPanel();
+        JPanel savePathFieldPanel = new JPanel();
         JLabel pathLabel = new JLabel("Path:");
         JTextField pathField = new JTextField(15);
+        JPanel saveNameFieldPanel = new JPanel();
+        JLabel nameLabel = new JLabel("Name:");
+        JTextField nameField = new JTextField(11);
+        JLabel extensionLabel = new JLabel(".txt");
         JPanel saveloadButtonPanel = new JPanel();
         JButton saveButton = new JButton("Save");
         JButton loadButton = new JButton("Load");
 
-        pathField.setText(mainPath + "/saves");
-        saveloadFieldPanel.add(pathLabel);
-        saveloadFieldPanel.add(pathField);
-        saveloadFieldPanel.setMaximumSize(new Dimension(200, 30));
+        pathField.setText(mainPath + "saves/");
+        savePathFieldPanel.add(pathLabel);
+        savePathFieldPanel.add(pathField);
+        savePathFieldPanel.setMaximumSize(new Dimension(200, 30));
+        saveNameFieldPanel.add(nameLabel);
+        saveNameFieldPanel.add(nameField);
+        saveNameFieldPanel.add(extensionLabel);
+        saveNameFieldPanel.setMaximumSize(new Dimension(200, 30));
         saveloadButtonPanel.add(saveButton);
         saveloadButtonPanel.add(loadButton);
         saveloadButtonPanel.setMaximumSize(new Dimension(200, 30));
         LoadFractalUsecase loadUsecase = new LoadFractalUsecase(solver, colorSolver, fr);
-
+        SaveFractalUsecase saveUsecase = new SaveFractalUsecase(solver, colorSolver, fr);
+        try {
+            loadUsecase.loadFractal(mainPath + "saves/" + "default.txt");
+            variablePresenter.updateDropdownAmount();
+            variablePresenter.updateFields();
+            colorEquationPresenter.updateFields();
+        } catch (Exception _) {}
 
         loadButton.addActionListener(_ -> {
             try{
-                loadUsecase.loadFractal(pathField.getText());
+                loadUsecase.loadFractal(pathField.getText() + nameField.getText() + ".txt");
                 variablePresenter.updateDropdownAmount();
                 variablePresenter.updateFields();
                 colorEquationPresenter.updateFields();
@@ -388,11 +403,21 @@ public class AppBuilder {
                 Popup _ = new Popup("Error", e.getMessage(), pathField.getLocationOnScreen());
             }
         });
+
+        saveButton.addActionListener(_ -> {
+            try{
+                saveUsecase.save(pathField.getText() + nameField.getText() + ".txt");
+            } catch (IOException e) {
+                Popup _ = new Popup("Error", nameField.getText() + ".txt could not be saved or already exists." , pathField.getLocationOnScreen());
+            }
+        });
         fractalPanel.add(mainLabel);
-        fractalPanel.add(saveloadFieldPanel);
+        fractalPanel.add(savePathFieldPanel);
+        fractalPanel.add(saveNameFieldPanel);
         fractalPanel.add(saveloadButtonPanel);
 
     }
+
     public AppBuilder addFractalControlFrame(){
         fractalPanel.setLayout(new BoxLayout(fractalPanel, BoxLayout.Y_AXIS));
         addRenderButtons();

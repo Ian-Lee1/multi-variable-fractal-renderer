@@ -1,6 +1,5 @@
 package app;
 
-import usecase.load.LoadFractalUsecase;
 
 import javax.swing.*;
 public final class Main {
