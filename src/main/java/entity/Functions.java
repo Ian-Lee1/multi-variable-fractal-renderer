@@ -9,6 +9,7 @@ public enum Functions {
     SQRT,
     GETR,
     GETI,
+    INT,
     NONE;
     @Override
     public String toString() {
@@ -19,6 +20,9 @@ public enum Functions {
             case "LEN" -> "len";
             case "LEN2" -> "len2";
             case "SQRT" -> "sqr";
+            case "GETR" -> "getR";
+            case "GETI" -> "getI";
+            case "INT" -> "int";
             case "NONE" -> "";
             default -> super.toString();
         };
