@@ -43,10 +43,10 @@ public class EquParenthesisComponent implements EquComponent{
                 return new ComplexBasic(temp.getR(), 0);
             }
             case Functions.GETI -> {
-                return new ComplexBasic(0, temp.getI());
+                return new ComplexBasic(temp.getI(), 0);
             }
             case Functions.INT -> {
-                return new ComplexBasic((int)temp.getR(), (int)temp.getI());
+                return new ComplexBasic(Math.floor(temp.getR()), Math.floor(temp.getI()));
             }
             case Functions.NONE -> {
                 return temp;

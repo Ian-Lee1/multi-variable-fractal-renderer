@@ -264,12 +264,12 @@ public class EquLinkedComponentSolver implements Solver, SolverHasDefault {
                 return new FunctionTuple(Functions.LEN2, i+4);
             } else if (equation.startsWith("sqrt(", i)){
                 return new FunctionTuple(Functions.SQRT, i+4);
-            } else if (equation.startsWith("getR(", i)){
+            } else if (equation.startsWith("getr(", i)){
                 return new FunctionTuple(Functions.GETR, i+4);
-            } else if (equation.startsWith("getI(", i)){
+            } else if (equation.startsWith("geti(", i)){
                 return new FunctionTuple(Functions.GETI, i+4);
             } else if (equation.startsWith("int(", i)){
-                return new FunctionTuple(Functions.INT, i+4);
+                return new FunctionTuple(Functions.INT, i+3);
             } else throw new EquationError("Unknown function in equation.");
     }
 
