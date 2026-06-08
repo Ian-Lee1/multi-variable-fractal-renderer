@@ -56,11 +56,15 @@ public class FractalRenderer {
     public void setCenter(Complex c){
         this.center = c;
     }
-
+    public Complex getCenter(){
+        return this.center;
+    }
     public void move(Complex dC){
         center = center.add(dC);
     }
-
+    public int getMaxIteration(){
+        return iterations;
+    }
     public double getRadius(){
         return radius;
     }
@@ -86,13 +90,23 @@ public class FractalRenderer {
     public void setBailVariable(int i){
         this.bailVariable = i;
     }
-
+    public int getBailVariable(){
+        return bailVariable;
+    }
     public void setBailMax(double m){
         this.bailAmount = m;
     }
 
     public void setBailMin(double m){
         this.minChange = m;
+    }
+
+    public double getBailMax(){
+        return this.bailAmount;
+    }
+
+    public double getBailMin(){
+        return this.minChange;
     }
 
     public void setIterations(int i){
