@@ -44,6 +44,8 @@ public class LoadFractalUsecase {
             JSONArray varaibleDataArray = data.getJSONArray("variables");
             for (int i = 0; i < varaibleDataArray.length(); i++) {
                 solver.addVariable();
+                if (colorSolver.getVariableCount() < solver.getVariableCount())
+                    colorSolver.addVariable();
             }
 
             for (int i = 0; i < varaibleDataArray.length(); i++) {
