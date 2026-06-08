@@ -1,5 +1,7 @@
 package app;
 
+import usecase.load.LoadFractalUsecase;
+
 import javax.swing.*;
 public final class Main {
     public static void main(String[] args) {
@@ -17,6 +19,9 @@ public final class Main {
     application.pack();
     application.setLocationRelativeTo(null);
     application.setVisible(true);
+
+        LoadFractalUsecase lf = new LoadFractalUsecase();
+        lf.loadFractal("C:/Users/User/Desktop/multi-var-fractal/saves/test.txt");
     }
 }
 
