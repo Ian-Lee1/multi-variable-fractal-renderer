@@ -1,0 +1,57 @@
+{
+  "bailMax": 4.0E9,
+  "centerI": 0,
+  "bailMin": -1.0E-5,
+  "variables": [
+    {
+      "defaultR": 47.506014723251845,
+      "equation": "",
+      "index": 0,
+      "defaultI": 123.07050272430133
+    },
+    {
+      "defaultR": 0,
+      "equation": "((v0-Fint(v0))*c(4)-c(2,2i))*v3",
+      "index": 1,
+      "defaultI": 0
+    },
+    {
+      "defaultR": 0,
+      "equation": "Fint(v0)*c(0.01)",
+      "index": 2,
+      "defaultI": 0
+    },
+    {
+      "defaultR": 1,
+      "equation": "c(0)",
+      "index": 3,
+      "defaultI": 0
+    },
+    {
+      "defaultR": 0,
+      "equation": "(v1)^c(2)+v4^c(2)+v2",
+      "index": 4,
+      "defaultI": 0
+    },
+    {
+      "defaultR": 0,
+      "equation": "v5^c(2)+(v0*c(.01))",
+      "index": 5,
+      "defaultI": 0
+    },
+    {
+      "defaultR": 0,
+      "equation": "v1+v6",
+      "index": 6,
+      "defaultI": 0
+    }
+  ],
+  "GEquation": "v0*c(255)",
+  "BEquation": "(c(1)-(Flen((v5/c(4))^c(2))))*c(25)",
+  "varAmt": 7,
+  "maxIter": 150,
+  "bailVar": 4,
+  "centerR": -75.56448800104951,
+  "radius": 123.37895009954956,
+  "REquation": "(c(1)-(Flen((v5/c(4))^c(2))))*c(40)"
+}

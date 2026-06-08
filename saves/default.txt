@@ -1,0 +1,27 @@
+{
+  "bailMax": 4,
+  "centerI": 0,
+  "bailMin": 0.001,
+  "variables": [
+    {
+      "defaultR": 3.456666666666585,
+      "equation": "",
+      "index": 0,
+      "defaultI": 3.989999999999918
+    },
+    {
+      "defaultR": 0,
+      "equation": "v1^c(2)+v0",
+      "index": 1,
+      "defaultI": 0
+    }
+  ],
+  "GEquation": "v0*c(155)",
+  "radius": 1.39471376,
+  "BEquation": "v0*c(55)",
+  "varAmt": 2,
+  "maxIter": 50,
+  "bailVar": 1,
+  "centerR": -0.7502888071733333,
+  "REquation": "v0*c(255)"
+}
