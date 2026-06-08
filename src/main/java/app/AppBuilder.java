@@ -1,6 +1,7 @@
 package app;
 
 import entity.fractalRenderer.FractalRenderer;
+import presenter.ColorEquationPresenter;
 import presenter.FractalPresenter;
 import presenter.VariablePresenter;
 import usecase.EquLinkedComponentSolver;
@@ -9,6 +10,7 @@ import usecase.SolverHasDefault;
 import usecase.fractal.FractalBailUsecase;
 import usecase.fractal.FractalMoveUsecase;
 import usecase.fractal.FractalRenderUsecase;
+import usecase.load.LoadFractalUsecase;
 import usecase.variable.AddVariableUsecase;
 import usecase.variable.ChangeVariableDefaultUsecase;
 import usecase.variable.DeleteVariableUsecase;
@@ -28,7 +30,7 @@ public class AppBuilder {
     private final Solver colorSolver = new EquLinkedComponentSolver();
     // v0 = iterRatio, v1... vn = solver's vn
     //v0-> v2 equ = color equations.
-
+    final String mainPath;
     final JPanel variablePanel = new JPanel();
     final JPanel fractalPanel = new JPanel();
     final ImageIcon fractalImage = new ImageIcon();
@@ -38,17 +40,18 @@ public class AppBuilder {
     private DeleteVariableUsecase deleteVariableUsecase;
     private ChangeVariableDefaultUsecase changeDefault;
     private SetEquationUsecase setEquationUsecase;
-
+    private ColorEquationPresenter colorEquationPresenter;
 
     private JTextField screenshotPath = new JTextField(15);
     private JTextField screenshotName = new JTextField(15);
     private JButton screenshotButton = new JButton("Screenshot");
 
     private JComboBox<Integer> bailDropdown = new JComboBox<>();
-    public AppBuilder() {
+    public AppBuilder(String mainPath) {
         //final BorderLayout borderLayout = new BorderLayout();
         //panel.setLayout(borderLayout);
         panel.setPreferredSize(new Dimension(800, 800));
+        this.mainPath = mainPath;
     }
 
     private class Popup{
@@ -162,7 +165,8 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addFractalControlFrame(){
+
+    private void addRenderButtons(){
         JPanel textPanel = new JPanel();
         JLabel renderText = new JLabel("Render:");
         JButton renderMainButton = new JButton("Main");
@@ -192,8 +196,10 @@ public class AppBuilder {
             presenter.updateImage();
             fractalView.repaint();
         });
+        fractalPanel.add(textPanel);
+    }
 
-
+    private void addBailControls(){
         FractalBailUsecase bail = new FractalBailUsecase(fr);
 
         JPanel mid = new JPanel();
@@ -259,7 +265,11 @@ public class AppBuilder {
         bottom.add(fieldMin);
         bottom.add(txtMaxAmt);
         bottom.add(fieldMax);
+        fractalPanel.add(mid);
+        fractalPanel.add(bottom);
+    }
 
+    private void addColorEquations(){
         JLabel colorEquationMainLabel = new JLabel("Color Equations:");
         JPanel colorEquationPanelR = new JPanel();
         JLabel colorEquationLabelR = new JLabel("R:");
@@ -289,13 +299,6 @@ public class AppBuilder {
         colorSolver.addVariable();
         colorSolver.addVariable();
         SetEquationUsecase colorSetEquation = new SetEquationUsecase(colorSolver);
-        colorEquationFieldR.setText("v0*c(255)*Fsin(Flen(v1*c(1)))");
-        colorSetEquation.setEquation(0, "v0*c(255)*Fsin(Flen(v1*c(1)))");
-        colorEquationFieldG.setText("v0*c(255)*Fsin(Flen(v1*c(1i)))");
-        colorSetEquation.setEquation(1, "v0*c(255)*Fsin(Flen(v1*c(1i)))");
-        colorEquationFieldB.setText("v0*c(255)*Fcos(Flen(v1*c(-1,1i)))");
-        colorSetEquation.setEquation(2, "v0*c(255)*Fcos(Flen(v1*c(-1,1i)))");
-
         colorEquationFieldR.addActionListener(_ -> {
             try {
                 colorSetEquation.setEquation(0, colorEquationFieldR.getText());
@@ -318,6 +321,17 @@ public class AppBuilder {
             }
         });
 
+        colorEquationPresenter = new ColorEquationPresenter(colorEquationFieldR, colorEquationFieldG, colorEquationFieldB, colorSolver);
+
+        fractalPanel.add(colorEquationMainLabel);
+        fractalPanel.add(colorEquationPanelR);
+        fractalPanel.add(colorEquationPanelG);
+        fractalPanel.add(colorEquationPanelB);
+
+
+    }
+
+    private void addScreenshotControls(){
         JPanel screenshotPathPanel = new JPanel();
         JPanel screenshotNamePanel = new JPanel();
         JLabel screenshotLabel = new JLabel("Screenshot:");
@@ -331,7 +345,7 @@ public class AppBuilder {
                 Popup _ = new Popup("Error", "Screenshot path or name is invalid.", screenshotButton.getLocationOnScreen());
             }
         });
-        screenshotPath.setText("C:/Users/User/Desktop/");
+        screenshotPath.setText(mainPath + "/screenshots");
         screenshotPathPanel.add(screenshotPathLabel);
         screenshotPathPanel.add(screenshotPath);
         screenshotNamePanel.add(screenshotNameLabel);
@@ -340,23 +354,61 @@ public class AppBuilder {
         screenshotPathPanel.setMaximumSize(new Dimension(200, 30));
         screenshotNamePanel.setPreferredSize(new Dimension(200, 30));
         screenshotNamePanel.setMaximumSize(new Dimension(200, 30));
-        fractalPanel.setLayout(new BoxLayout(fractalPanel, BoxLayout.Y_AXIS));
-
-        fractalPanel.add(mid);
-        fractalPanel.add(bottom);
-        fractalPanel.add(textPanel);
-
-        fractalPanel.add(colorEquationMainLabel);
-        fractalPanel.add(colorEquationPanelR);
-        fractalPanel.add(colorEquationPanelG);
-        fractalPanel.add(colorEquationPanelB);
-
         fractalPanel.add(screenshotLabel);
         fractalPanel.add(screenshotPathPanel);
         fractalPanel.add(screenshotNamePanel);
+    }
+
+    private void addSaveLoadControls(){
+        JLabel mainLabel = new JLabel("Saving Loading:");
+        JPanel saveloadFieldPanel = new JPanel();
+        JLabel pathLabel = new JLabel("Path:");
+        JTextField pathField = new JTextField(15);
+        JPanel saveloadButtonPanel = new JPanel();
+        JButton saveButton = new JButton("Save");
+        JButton loadButton = new JButton("Load");
+
+        pathField.setText(mainPath + "/saves");
+        saveloadFieldPanel.add(pathLabel);
+        saveloadFieldPanel.add(pathField);
+        saveloadFieldPanel.setMaximumSize(new Dimension(200, 30));
+        saveloadButtonPanel.add(saveButton);
+        saveloadButtonPanel.add(loadButton);
+        saveloadButtonPanel.setMaximumSize(new Dimension(200, 30));
+        LoadFractalUsecase loadUsecase = new LoadFractalUsecase(solver, colorSolver, fr);
+
+
+        loadButton.addActionListener(_ -> {
+            try{
+                loadUsecase.loadFractal(pathField.getText());
+                variablePresenter.updateDropdownAmount();
+                variablePresenter.updateFields();
+                colorEquationPresenter.updateFields();
+            } catch (Exception e) {
+                Popup _ = new Popup("Error", e.getMessage(), pathField.getLocationOnScreen());
+            }
+        });
+        fractalPanel.add(mainLabel);
+        fractalPanel.add(saveloadFieldPanel);
+        fractalPanel.add(saveloadButtonPanel);
+
+    }
+    public AppBuilder addFractalControlFrame(){
+        fractalPanel.setLayout(new BoxLayout(fractalPanel, BoxLayout.Y_AXIS));
+        addRenderButtons();
+        addBailControls();
+        addColorEquations();
+        addSaveLoadControls();
+        addScreenshotControls();
         fractalPanel.setVisible(false);
         settings.add(fractalPanel);
         return this;
+//        colorEquationFieldR.setText("v0*c(255)*Fsin(Flen(v1*c(1)))");
+//        colorSetEquation.setEquation(0, "v0*c(255)*Fsin(Flen(v1*c(1)))");
+//        colorEquationFieldG.setText("v0*c(255)*Fsin(Flen(v1*c(1i)))");
+//        colorSetEquation.setEquation(1, "v0*c(255)*Fsin(Flen(v1*c(1i)))");
+//        colorEquationFieldB.setText("v0*c(255)*Fcos(Flen(v1*c(-1,1i)))");
+//        colorSetEquation.setEquation(2, "v0*c(255)*Fcos(Flen(v1*c(-1,1i)))");
     }
 
     public AppBuilder addVariableFrame(){

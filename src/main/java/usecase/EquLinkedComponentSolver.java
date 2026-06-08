@@ -24,6 +24,16 @@ public class EquLinkedComponentSolver implements Solver, SolverHasDefault {
         this.variableAddress = new ArrayList<>();
         this.variablesDefault = new ArrayList<>();
     }
+
+    public void reset(){
+        this.variables.clear();
+        this.equations.clear();
+        this.equLinks.clear();
+        this.tempVariables.clear();
+        this.variableAddress.clear();
+        this.variablesDefault.clear();
+    }
+
     @Override
     public void setEquation(int i, String equation) throws EquationError {
         if (i < 0 || i >= variables.size())
