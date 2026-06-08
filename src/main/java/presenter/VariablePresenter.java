@@ -39,6 +39,18 @@ public class VariablePresenter {
         this.equation.setText("");
     }
 
+    public void updateDropdownAmount(){
+        dropdown.setSelectedItem(0);
+        while (dropdown.getItemCount() < ((Solver)solver).getVariableCount()){
+            dropdown.addItem(bailDropdown.getItemCount());
+            bailDropdown.addItem(bailDropdown.getItemCount());
+        }
+        while (dropdown.getItemCount() > ((Solver)solver).getVariableCount()){
+            dropdown.removeItem(bailDropdown.getItemCount() - 1);
+            bailDropdown.removeItem(bailDropdown.getItemCount() - 1);
+        }
+    }
+
     public void updateFields(){
         int index = (int)dropdown.getSelectedItem();
         this.defaultI.setText("" + solver.getDefault(index).getI());

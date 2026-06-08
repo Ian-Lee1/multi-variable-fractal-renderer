@@ -12,4 +12,5 @@ public interface Solver {
     int getVariableCount();
     void solve();
     String getEquation(int i);
+    void reset();
 }
