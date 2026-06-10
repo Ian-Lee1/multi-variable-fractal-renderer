@@ -33,4 +33,14 @@ public class FractalMoveUsecase {
         setMousePos(x, y);
         fr.move(new ComplexBasic(moveDistX, moveDistY));
     }
+
+    public void moveTo(double r, double i){
+       fr.setCenter(new ComplexBasic(r, i));
+    }
+
+    public void setRadius(double r){
+       fr.setRadius(r);
+    }
+
+
 }

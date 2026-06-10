@@ -9,6 +9,8 @@ import usecase.SolverHasDefault;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 
@@ -29,7 +31,7 @@ public class FractalRenderer {
     private double radius;
     private BufferedImage screen, main, preview;
     private Solver solver;
-    
+    private PropertyChangeSupport support;
     private Solver colorSolver;
 
     public FractalRenderer(int w, int h, int bVar, double bAmt, double minChange, Solver solver, Solver colorSolver){
@@ -42,6 +44,7 @@ public class FractalRenderer {
         this.solver = solver;
         this.previewFactor = 3;
         this.colorSolver = colorSolver;
+        this.support = new PropertyChangeSupport(this);
         screen = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         main = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         preview = new BufferedImage(w/previewFactor, h/previewFactor, BufferedImage.TYPE_3BYTE_BGR);
@@ -53,14 +56,20 @@ public class FractalRenderer {
         updateScreen();
     }
 
+    public void addListener(PropertyChangeListener listener){
+        support.addPropertyChangeListener(listener);
+    }
+
     public void setCenter(Complex c){
         this.center = c;
+        support.firePropertyChange("Moved", 0, 1);
     }
     public Complex getCenter(){
         return this.center;
     }
     public void move(Complex dC){
         center = center.add(dC);
+        support.firePropertyChange("Moved", 0, 1);
     }
     public int getMaxIteration(){
         return iterations;
@@ -78,6 +87,7 @@ public class FractalRenderer {
 
     public void setRadius(double radius){
         this.radius = radius;
+        support.firePropertyChange("Moved", 0, 1);
     }
 
     public void setWidth(int w){
@@ -111,6 +121,7 @@ public class FractalRenderer {
 
     public void setIterations(int i){
         this.iterations = i;
+        support.firePropertyChange("Moved", 0, 1);
     }
 
     public BufferedImage getScreen(){

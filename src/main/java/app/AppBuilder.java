@@ -2,6 +2,7 @@ package app;
 
 import entity.fractalRenderer.FractalRenderer;
 import presenter.ColorEquationPresenter;
+import presenter.FractalFieldPresenter;
 import presenter.FractalPresenter;
 import presenter.VariablePresenter;
 import usecase.EquLinkedComponentSolver;
@@ -34,6 +35,7 @@ public class AppBuilder {
     final String mainPath;
     final JPanel variablePanel = new JPanel();
     final JPanel fractalPanel = new JPanel();
+    final JPanel keyframePanel = new JPanel();
     final ImageIcon fractalImage = new ImageIcon();
     private FractalRenderer fr;
     private VariablePresenter variablePresenter;
@@ -42,6 +44,9 @@ public class AppBuilder {
     private ChangeVariableDefaultUsecase changeDefault;
     private SetEquationUsecase setEquationUsecase;
     private ColorEquationPresenter colorEquationPresenter;
+    private FractalMoveUsecase moveUsecase;
+    private FractalPresenter presenter;
+    private FractalFieldPresenter fieldPresenter;
 
     private JTextField screenshotPath = new JTextField(15);
     private JTextField screenshotName = new JTextField(15);
@@ -66,6 +71,97 @@ public class AppBuilder {
         }
     }
 
+    public AppBuilder addKeyframePanel(){
+
+        //KEYFRAME SELECTOR
+//        JPanel scrollPanel = new JPanel();
+//        scrollPanel.setLayout(new BoxLayout(scrollPanel, BoxLayout.Y_AXIS));
+//        for (int i = 0 ; i < 50 ; i++){
+//            //JLabel testButton = new JLabel("test " + i);
+//            JButton testButton = new JButton("test " + i);
+//            int finalI = i;
+//            testButton.addActionListener(_ -> {
+//                Popup _ = new Popup("test", "Button " + finalI, testButton.getLocationOnScreen());
+//            });
+//            scrollPanel.add(testButton);
+//        }
+//        JScrollPane scrollPane = new JScrollPane(scrollPanel);
+//        scrollPane.setMaximumSize(new Dimension(150,200));
+//        keyframePanel.setLayout(new BorderLayout());
+//        keyframePanel.add(scrollPane, BorderLayout.CENTER);
+//        keyframePanel.add(scrollPane);
+        JComboBox<Integer> keyframeDropBox = new JComboBox<>();
+
+        //keyframe data/frame setter
+        JPanel dataPanel = new JPanel();
+        JPanel centerRPanel = new JPanel();
+        JLabel centerRLabel = new JLabel("R:");
+        JTextField centerRField = new JTextField(5);
+        centerRPanel.add(centerRLabel);
+        centerRPanel.add(centerRField);
+
+        JPanel centerIPanel = new JPanel();
+        JLabel centerILabel = new JLabel("I:");
+        JTextField centerIField = new JTextField(5);
+        centerIPanel.add(centerILabel);
+        centerIPanel.add(centerIField);
+
+        JPanel radiusPanel = new JPanel();
+        JLabel radiusLabel = new JLabel("r:");
+        JTextField radiusField = new JTextField(5);
+        radiusPanel.add(radiusLabel);
+        radiusPanel.add(radiusField);
+
+        JPanel iterationPanel = new JPanel();
+        JLabel iterationLabel = new JLabel("i:");
+        JTextField iterationField = new JTextField(5);
+        iterationPanel.add(iterationLabel);
+        iterationPanel.add(iterationField);
+
+
+        JButton addButton = new JButton("add");
+        JButton removeButton = new JButton("remove");
+        JButton gotoButton = new JButton("goto");
+        JButton nextButton = new JButton("next");
+        JButton prevButton = new JButton("prev");
+
+        fieldPresenter = new FractalFieldPresenter(centerRField, centerIField, radiusField, iterationField, fr);
+        gotoButton.addActionListener(_ -> {
+            try{
+                moveUsecase.moveTo(Double.parseDouble(centerRField.getText()), Double.parseDouble(centerIField.getText()));
+                presenter.updateImage();
+                fractalView.repaint();
+            } catch (Exception e) {
+                Popup _ = new Popup("Error", "RI values produced error: " + e.getMessage(), gotoButton.getLocationOnScreen());
+            }
+        });
+
+        JPanel keyframeLeftPanel = new JPanel();
+        JPanel keyframeRightPanel = new JPanel();
+        keyframeLeftPanel.setLayout(new BoxLayout(keyframeLeftPanel, BoxLayout.Y_AXIS));
+        keyframeRightPanel.setLayout(new BoxLayout(keyframeRightPanel, BoxLayout.Y_AXIS));
+
+        keyframeLeftPanel.add(keyframeDropBox);
+        keyframeLeftPanel.add(centerRPanel);
+        keyframeLeftPanel.add(centerIPanel);
+        keyframeLeftPanel.add(radiusPanel);
+        keyframeLeftPanel.add(iterationPanel);
+
+        keyframeRightPanel.add(addButton);
+        keyframeRightPanel.add(removeButton);
+        keyframeRightPanel.add(gotoButton);
+        keyframeRightPanel.add(nextButton);
+        keyframeRightPanel.add(prevButton);
+
+        dataPanel.add(keyframeLeftPanel);
+        dataPanel.add(keyframeRightPanel);
+        dataPanel.setMaximumSize(new Dimension(200,200));
+        keyframePanel.add(dataPanel);
+        keyframePanel.setMaximumSize(new Dimension(200,200));
+        keyframePanel.setVisible(false);
+        settings.add(keyframePanel);
+        return this;
+    }
     public AppBuilder addFractalView(){
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         fractalView.setMinimumSize(new Dimension(600, 800));
@@ -74,8 +170,8 @@ public class AppBuilder {
 
         JLabel fractalLabel = new JLabel();
 
-        FractalPresenter presenter = new FractalPresenter(fr, fractalImage);
-        FractalMoveUsecase moveUsecase = new FractalMoveUsecase(fr);
+        presenter = new FractalPresenter(fr, fractalImage);
+
 
         BufferedImage image = fr.getScreen();
 
@@ -163,6 +259,7 @@ public class AppBuilder {
     }
     public AppBuilder constructFractalRenderer(){
         fr = new FractalRenderer(800, 800, 1, 4, 0.00001, solver, colorSolver);
+        moveUsecase  = new FractalMoveUsecase(fr);
         return this;
     }
 
@@ -520,6 +617,7 @@ public class AppBuilder {
         settingsButton.addActionListener( _ -> {
             variablePanel.setVisible(settingsButton.isSelected());
             fractalPanel.setVisible(settingsButton.isSelected());
+            keyframePanel.setVisible(settingsButton.isSelected());
         });
         settings.setLayout(new BoxLayout(settings, BoxLayout.Y_AXIS));
         settings.add(settingsButton);
