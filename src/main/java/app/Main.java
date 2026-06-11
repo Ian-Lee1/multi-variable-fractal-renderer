@@ -2,9 +2,10 @@ package app;
 
 
 import javax.swing.*;
+
 public final class Main {
     public static void main(String[] args) {
-        //UI panels -> controller -> input boundaries <|- usecase -> output boundary <|- presenter
+
     AppBuilder appBuilder = new AppBuilder("C:/Users/User/Desktop/multi-var-fractal/");
     JFrame application = appBuilder
             .addVariableFrame()
@@ -13,11 +14,14 @@ public final class Main {
             .addFractalControlFrame()
             .addFractalView()
             .addSettingsButton()
+            .addKeyframePanel()
 
             .build();
     application.pack();
     application.setLocationRelativeTo(null);
     application.setVisible(true);
+
+
    }
 }
 
