@@ -2,7 +2,6 @@ package app;
 
 
 import javax.swing.*;
-import java.awt.*;
 
 public final class Main {
     public static void main(String[] args) {
@@ -14,8 +13,8 @@ public final class Main {
             .constructFractalRenderer()
             .addFractalControlFrame()
             .addFractalView()
-            .addKeyframePanel()
             .addSettingsButton()
+            .addKeyframePanel()
 
             .build();
     application.pack();

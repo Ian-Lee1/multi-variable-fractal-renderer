@@ -28,6 +28,8 @@ public class AppBuilder {
     private final JPanel panel = new JPanel();
     private final JPanel fractalView = new JPanel();
     private final JPanel settings = new JPanel();
+    private final JPanel animation = new JPanel();
+
     private final Solver solver = new EquLinkedComponentSolver();
     private final Solver colorSolver = new EquLinkedComponentSolver();
     // v0 = iterRatio, v1... vn = solver's vn
@@ -72,7 +74,7 @@ public class AppBuilder {
     }
 
     public AppBuilder addKeyframePanel(){
-
+        animation.setLayout(new BoxLayout(animation, BoxLayout.Y_AXIS));
         //KEYFRAME SELECTOR
 //        JPanel scrollPanel = new JPanel();
 //        scrollPanel.setLayout(new BoxLayout(scrollPanel, BoxLayout.Y_AXIS));
@@ -159,7 +161,14 @@ public class AppBuilder {
         keyframePanel.add(dataPanel);
         keyframePanel.setMaximumSize(new Dimension(200,200));
         keyframePanel.setVisible(false);
-        settings.add(keyframePanel);
+
+        JToggleButton animationButton = new JToggleButton("animation");
+        animationButton.addActionListener( _ -> {
+            keyframePanel.setVisible(animationButton.isSelected());
+        });
+        animation.add(keyframePanel);
+        panel.add(animation);
+        settings.add(animationButton);
         return this;
     }
     public AppBuilder addFractalView(){
@@ -617,7 +626,6 @@ public class AppBuilder {
         settingsButton.addActionListener( _ -> {
             variablePanel.setVisible(settingsButton.isSelected());
             fractalPanel.setVisible(settingsButton.isSelected());
-            keyframePanel.setVisible(settingsButton.isSelected());
         });
         settings.setLayout(new BoxLayout(settings, BoxLayout.Y_AXIS));
         settings.add(settingsButton);
