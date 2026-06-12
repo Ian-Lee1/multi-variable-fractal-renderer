@@ -15,7 +15,7 @@ public class BezierSolver {
     private static Complex getControl(Complex prev, Complex start, Complex end, int dir){
         if (prev == null || end == null)
             return start;
-        double minDist = Math.min(start.sub(prev).lengthSq(), start.sub(end).lengthSq());
+        double minDist = Math.min(start.getR() - prev.getR(), end.getR() - start.getR()); //R component will store a keyframe's frame, and I as the data.
         minDist = Math.sqrt(minDist) * 0.5 * dir;
         Complex vec = end.sub(prev).div(new ComplexBasic(Math.sqrt(end.sub(prev).lengthSq()), 0)).mul(new ComplexBasic(minDist, 0));
         return start.add(vec);

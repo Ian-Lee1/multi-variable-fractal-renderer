@@ -1,3 +1,3 @@
 package entity;
 
-public record KeyframeTuple(KeyframeType type, double value) {}
+public record KeyframeTuple(KeyframeType type, int index, double value) {}

@@ -61,4 +61,14 @@ public class Keyframe {
             this.last.setNext(last);
         this.last = last;
     }
+
+    public Keyframe remove(){
+        if (this.next != null)
+            this.next.setLast(this.last);
+        if (this.last != null) {
+            this.last.setNext(this.next);
+            return this.last;
+        }
+        else return this.next;
+    }
 }
